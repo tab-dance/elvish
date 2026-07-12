@@ -65,6 +65,19 @@ func completionStart(ed *Editor, bindings tk.Bindings, ev *eval.Evaler, cfg comp
 		return
 	}
 	if smart {
+		// With a single candidate, insert it directly instead of opening
+		// the completion menu. This avoids a redundant menu when an
+		// external completion tool has already presented its own UI and
+		// returned one result.
+		if len(result.Items) == 1 {
+			codeArea.MutateState(func(s *tk.CodeAreaState) {
+				s.Pending = tk.PendingCode{
+					Content: result.Items[0].ToInsert,
+					From:    result.Replace.From, To: result.Replace.To}
+				s.ApplyPending()
+			})
+			return
+		}
 		prefix := ""
 		for i, item := range result.Items {
 			if i == 0 {
@@ -110,12 +123,15 @@ func initCompletion(ed *Editor, ev *eval.Evaler, nb eval.NsBuilder) {
 	bindings := newMapBindings(ed, ev, bindingVar)
 	matcherMapVar := newMapVar(vals.EmptyMap)
 	argGeneratorMapVar := newMapVar(vals.EmptyMap)
+	commandGeneratorVar := newFnVar(nil)
 	cfg := func() complete.Config {
 		return complete.Config{
 			Filterer: adaptMatcherMap(
 				ed, ev, matcherMapVar.Get().(vals.Map)),
 			ArgGenerator: adaptArgGeneratorMap(
 				ev, argGeneratorMapVar.Get().(vals.Map)),
+			CommandGenerator: adaptCommandGenerator(
+				ev, commandGeneratorVar.Get()),
 		}
 	}
 	generateForSudo := func(args []string) ([]complete.RawItem, error) {
@@ -135,9 +151,10 @@ func initCompletion(ed *Editor, ev *eval.Evaler, nb eval.NsBuilder) {
 	nb.AddNs("completion",
 		eval.BuildNsNamed("edit:completion").
 			AddVars(map[string]vars.Var{
-				"arg-completer": argGeneratorMapVar,
-				"binding":       bindingVar,
-				"matcher":       matcherMapVar,
+				"arg-completer":     argGeneratorMapVar,
+				"binding":           bindingVar,
+				"command-completer": commandGeneratorVar,
+				"matcher":           matcherMapVar,
 			}).
 			AddGoFns(map[string]any{
 				"accept":      func() { listingAccept(app) },
@@ -450,6 +467,60 @@ func adaptArgGeneratorMap(ev *eval.Evaler, m vals.Map) complete.ArgGenerator {
 			eval.CallCfg{Args: argValues, From: "[editor arg generator]"},
 			eval.EvalCfg{Ports: []*eval.Port{
 				// TODO: Supply the Chan component of port 2.
+				nil, port1, {File: os.Stderr}}})
+		done()
+
+		return output, err
+	}
+}
+
+// adaptCommandGenerator adapts $edit:completion:command-completer into a
+// complete.CommandGenerator. If the variable is nil (not set), nil is returned
+// and the built-in generateCommands is used.
+func adaptCommandGenerator(ev *eval.Evaler, v any) complete.CommandGenerator {
+	gen, ok := v.(eval.Callable)
+	if !ok || gen == nil {
+		return nil
+	}
+	return func(seed string) ([]complete.RawItem, error) {
+		var output []complete.RawItem
+		var outputMutex sync.Mutex
+		collect := func(item complete.RawItem) {
+			outputMutex.Lock()
+			defer outputMutex.Unlock()
+			output = append(output, item)
+		}
+		valueCb := func(ch <-chan any) {
+			for v := range ch {
+				switch v := v.(type) {
+				case string:
+					collect(complete.PlainItem(v))
+				case complexItem:
+					collect(complete.ComplexItem(v))
+				default:
+					collect(complete.PlainItem(vals.ToString(v)))
+				}
+			}
+		}
+		bytesCb := func(r *os.File) {
+			buffered := bufio.NewReader(r)
+			for {
+				line, err := buffered.ReadString('\n')
+				if line != "" {
+					collect(complete.PlainItem(strutil.ChopLineEnding(line)))
+				}
+				if err != nil {
+					break
+				}
+			}
+		}
+		port1, done, err := eval.PipePort(valueCb, bytesCb)
+		if err != nil {
+			panic(err)
+		}
+		err = ev.Call(gen,
+			eval.CallCfg{Args: []any{seed}, From: "[editor command generator]"},
+			eval.EvalCfg{Ports: []*eval.Port{
 				nil, port1, {File: os.Stderr}}})
 		done()
 

@@ -23,6 +23,9 @@ type Config struct {
 	// Used to generate candidates for a command argument. Defaults to
 	// GenerateFileNames.
 	ArgGenerator ArgGenerator
+	// Used to generate candidates for a command name. If nil, the built-in
+	// generateCommands is used.
+	CommandGenerator CommandGenerator
 }
 
 // Filterer is the type of functions that filter raw candidates.
@@ -33,9 +36,14 @@ type Filterer func(ctxName, seed string, rawItems []RawItem) []RawItem
 // argument to complete, and returns raw candidates or an error.
 type ArgGenerator func(args []string) ([]RawItem, error)
 
+// CommandGenerator is the type of functions that generate raw candidates for a
+// command name. It takes the seed (the partial command name being completed)
+// and returns raw candidates or an error.
+type CommandGenerator func(seed string) ([]RawItem, error)
+
 // Result keeps the result of the completion algorithm.
 type Result struct {
-	Name    string
+	Name string
 	// Seed is the unquoted (logical) value of the text being completed. It is
 	// the purely-evaluated value of the compound the user has typed, before any
 	// quoting is applied. Compare this against the unquoted value of candidates
