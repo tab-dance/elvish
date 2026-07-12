@@ -295,6 +295,44 @@ func TestCompleteSudo(t *testing.T) {
 	testGlobal(t, f.Evaler, "cands", vals.MakeList("val1", "val2"))
 }
 
+func TestCompletionCommandCompleter(t *testing.T) {
+	f := setup(t)
+
+	evals(f.Evaler,
+		`fn myone { }`,
+		`fn mytwo { }`,
+		`set edit:completion:command-completer = {|seed|
+		   put myone
+		   put mytwo
+		 }`)
+
+	feedInput(f.TTYCtrl, "my\t")
+	f.TestTTY(t,
+		"~> myone\n", Styles,
+		"   VVVVV",
+		" COMPLETING command  ", Styles,
+		"******************** ", term.DotHere, "\n",
+		"myone  mytwo", Styles,
+		"+++++       ",
+	)
+}
+
+func TestCompletionCommandCompleter_EmptyResult(t *testing.T) {
+	f := setup(t)
+
+	evals(f.Evaler,
+		`fn myfunc { }`,
+		`set edit:completion:command-completer = {|seed|
+		   # return nothing — no candidates should be shown
+		 }`)
+
+	feedInput(f.TTYCtrl, "myf\t")
+	f.TTYCtrl.TestBuffer(t, term.NewBufferBuilder(f.width).
+		Write("~> ").
+		WriteStyled(ui.T("myf", ui.FgRed)).
+		SetDotHere().Buffer())
+}
+
 func TestCompletionMatcher(t *testing.T) {
 	f := setup(t)
 

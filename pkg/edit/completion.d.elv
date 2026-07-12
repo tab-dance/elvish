@@ -4,6 +4,11 @@ var completion:arg-completer
 # Keybinding for the completion mode.
 var completion:binding
 
+# A function for custom command name completion. It receives the seed (the
+# partial command name being completed) and should output candidates. If not
+# set, the built-in command completion is used.
+var completion:command-completer
+
 # A map mapping from context names to matcher functions. See the
 # [Matcher](#matcher) section.
 var completion:matcher
