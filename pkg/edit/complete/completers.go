@@ -152,6 +152,11 @@ func completeVariable(p np.Path, ev *eval.Evaler, cfg Config) (*context, []RawIt
 		"variable", nameSeed, parse.Bareword,
 		diag.Ranging{From: begin, To: primary.Range().To}}
 
+	if cfg.VariableGenerator != nil {
+		items, err := cfg.VariableGenerator(nameSeed, ns)
+		return ctx, items, err
+	}
+
 	var items []RawItem
 	eachVariableInNs(ev, p, ns, func(varname string) {
 		items = append(items, noQuoteItem(parse.QuoteVariableName(varname)))

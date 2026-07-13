@@ -26,6 +26,9 @@ type Config struct {
 	// Used to generate candidates for a command name. If nil, the built-in
 	// generateCommands is used.
 	CommandGenerator CommandGenerator
+	// Used to generate candidates for a variable name. If nil, the built-in
+	// variable enumeration is used.
+	VariableGenerator VariableGenerator
 }
 
 // Filterer is the type of functions that filter raw candidates.
@@ -40,6 +43,12 @@ type ArgGenerator func(args []string) ([]RawItem, error)
 // command name. It takes the seed (the partial command name being completed)
 // and returns raw candidates or an error.
 type CommandGenerator func(seed string) ([]RawItem, error)
+
+// VariableGenerator is the type of functions that generate raw candidates for a
+// variable name. It takes the seed (the partial variable name being completed,
+// without the leading $) and the namespace, and returns raw candidates or an
+// error.
+type VariableGenerator func(seed, ns string) ([]RawItem, error)
 
 // Result keeps the result of the completion algorithm.
 type Result struct {

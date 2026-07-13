@@ -13,6 +13,13 @@ var completion:command-completer
 # [Matcher](#matcher) section.
 var completion:matcher
 
+# A function for custom variable name completion. It receives the seed (the
+# partial variable name being completed, without the leading $) and the
+# namespace (e.g. "" for the current namespace, "e:" for external commands, "E:"
+# for environment variables). It should output candidates. If not set, the
+# built-in variable completion is used.
+var completion:variable-completer
+
 # Produces a list of filenames that are suitable for completing the last
 # argument, ignoring all other arguments. The last argument is used in the
 # following ways:
