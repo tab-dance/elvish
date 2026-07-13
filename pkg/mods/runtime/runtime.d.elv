@@ -38,3 +38,23 @@ var effective-rc-path
 #
 # This variable is read-only.
 var elvish-path
+
+# Returns a map describing the live runtime state of the shell. The map has
+# the following keys:
+#
+# - `$shell` - always the string `elvish`.
+# - `$aliases` - a list of abbreviation keys from `$edit:abbr`.
+# - `$builtins` - a list of special forms (`if`, `while`, ...) and builtin
+#   function names (`put`, `echo`, ...).
+# - `$functions` - a list of user-defined function names from the global scope,
+#   without the `~` suffix.
+# - `$jobs` - a list of currently running background job identifiers. Elvish
+#   does not maintain a job table, so this is always empty.
+# - `$variables` - a list of all variable names visible in the global scope
+#   and the builtin namespace, without sigils or suffixes.
+#
+# All lists are sorted lexicographically and contain no duplicates.
+#
+# This function reads the Evaler's live state on each call, so it reflects
+# variables and functions defined after the `runtime:` module was loaded.
+fn context
