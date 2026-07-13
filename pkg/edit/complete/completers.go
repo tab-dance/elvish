@@ -159,10 +159,10 @@ func completeVariable(p np.Path, ev *eval.Evaler, cfg Config) (*context, []RawIt
 
 	var items []RawItem
 	eachVariableInNs(ev, p, ns, func(varname string) {
-		items = append(items, noQuoteItem(parse.QuoteVariableName(varname)))
+		items = append(items, NoQuoteItem(parse.QuoteVariableName(varname)))
 	})
 	if ns == "" {
-		items = append(items, noQuoteItem("e:"), noQuoteItem("E:"))
+		items = append(items, NoQuoteItem("e:"), NoQuoteItem("E:"))
 	}
 
 	return ctx, items, nil

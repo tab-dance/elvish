@@ -17,13 +17,15 @@ func (p PlainItem) Cook(q parse.PrimaryType) modes.CompletionItem {
 	return modes.CompletionItem{ToInsert: quoted, ToShow: ui.T(s)}
 }
 
-// noQuoteItem is a RawItem implementation that does not quote when cooked. This
-// type is not exposed, since argument generators never need this.
-type noQuoteItem string
+// NoQuoteItem is a RawItem implementation that does not quote when cooked. The
+// caller is responsible for pre-quoting the string (e.g. with
+// parse.QuoteVariableName) so that it is valid in the context where it will be
+// inserted.
+type NoQuoteItem string
 
-func (nq noQuoteItem) String() string { return string(nq) }
+func (nq NoQuoteItem) String() string { return string(nq) }
 
-func (nq noQuoteItem) Cook(parse.PrimaryType) modes.CompletionItem {
+func (nq NoQuoteItem) Cook(parse.PrimaryType) modes.CompletionItem {
 	s := string(nq)
 	return modes.CompletionItem{ToInsert: s, ToShow: ui.T(s)}
 }

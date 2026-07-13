@@ -552,11 +552,11 @@ func adaptVariableGenerator(ev *eval.Evaler, v any) complete.VariableGenerator {
 			for v := range ch {
 				switch v := v.(type) {
 				case string:
-					collect(complete.PlainItem(v))
+					collect(complete.NoQuoteItem(parse.QuoteVariableName(v)))
 				case complexItem:
 					collect(complete.ComplexItem(v))
 				default:
-					collect(complete.PlainItem(vals.ToString(v)))
+					collect(complete.NoQuoteItem(parse.QuoteVariableName(vals.ToString(v))))
 				}
 			}
 		}
@@ -565,7 +565,7 @@ func adaptVariableGenerator(ev *eval.Evaler, v any) complete.VariableGenerator {
 			for {
 				line, err := buffered.ReadString('\n')
 				if line != "" {
-					collect(complete.PlainItem(strutil.ChopLineEnding(line)))
+					collect(complete.NoQuoteItem(parse.QuoteVariableName(strutil.ChopLineEnding(line))))
 				}
 				if err != nil {
 					break

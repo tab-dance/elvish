@@ -77,7 +77,7 @@ func TestComplete(t *testing.T) {
 			return items
 		},
 		ArgGenerator: func(args []string) ([]RawItem, error) {
-			item := noQuoteItem(fmt.Sprintf("%#v", args))
+			item := NoQuoteItem(fmt.Sprintf("%#v", args))
 			return []RawItem{item}, nil
 		},
 	}
