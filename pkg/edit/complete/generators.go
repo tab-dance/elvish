@@ -73,7 +73,7 @@ func generateArgs(args []string, ev *eval.Evaler, p np.Path, cfg Config) ([]RawI
 		ns, _ := eval.SplitIncompleteQNameNs(qname)
 		var items []RawItem
 		eachVariableInNs(ev, p, ns, func(varname string) {
-			items = append(items, noQuoteItem(sigil+parse.QuoteVariableName(ns+varname)))
+			items = append(items, NoQuoteItem(sigil+parse.QuoteVariableName(ns+varname)))
 		})
 		return items, nil
 	case "del":
@@ -81,7 +81,7 @@ func generateArgs(args []string, ev *eval.Evaler, p np.Path, cfg Config) ([]RawI
 		// offer builtin variables.
 		var items []RawItem
 		addItem := func(varname string) {
-			items = append(items, noQuoteItem(parse.QuoteVariableName(varname)))
+			items = append(items, NoQuoteItem(parse.QuoteVariableName(varname)))
 		}
 		ev.Global().IterateKeysString(addItem)
 		eachDefinedVariable(p[len(p)-1], p[0].Range().From, addItem)
