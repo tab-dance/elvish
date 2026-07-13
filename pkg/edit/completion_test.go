@@ -333,6 +333,49 @@ func TestCompletionCommandCompleter_EmptyResult(t *testing.T) {
 		SetDotHere().Buffer())
 }
 
+func TestCompletionVariableCompleter(t *testing.T) {
+	f := setup(t)
+
+	evals(f.Evaler,
+		`var myvar = foo`,
+		`var myothervar = bar`,
+		`set edit:completion:variable-completer = {|seed ns|
+		   put myvar
+		   put myothervar
+		 }`)
+
+	feedInput(f.TTYCtrl, "$my\t")
+	f.TTYCtrl.TestBuffer(t, term.NewBufferBuilder(f.width).
+		Write("~> ").
+		WriteStyled(ui.T("$", ui.FgMagenta)).
+		WriteStyled(ui.T("myothervar", ui.Stylings(ui.Underlined, ui.FgMagenta))).
+		Newline().
+		WriteStyled(ui.T(" COMPLETING variable ", ui.Stylings(ui.Bold, ui.FgWhite, ui.BgMagenta))).
+		Write(" ").
+		SetDotHere().
+		Newline().
+		WriteStyled(ui.T("myothervar", ui.Inverse)).
+		Write("  ").
+		Write("myvar").
+		Buffer())
+}
+
+func TestCompletionVariableCompleter_EmptyResult(t *testing.T) {
+	f := setup(t)
+
+	evals(f.Evaler,
+		`var myvar = foo`,
+		`set edit:completion:variable-completer = {|seed ns|
+		   # return nothing
+		 }`)
+
+	feedInput(f.TTYCtrl, "$myv\t")
+	f.TTYCtrl.TestBuffer(t, term.NewBufferBuilder(f.width).
+		Write("~> ").
+		WriteStyled(ui.T("$myv", ui.FgMagenta)).
+		SetDotHere().Buffer())
+}
+
 func TestCompletionMatcher(t *testing.T) {
 	f := setup(t)
 
