@@ -23,3 +23,49 @@
 ▶ $nil
 ~> put $runtime:effective-rc-path
 ▶ $nil
+
+# runtime:context returns live shell state #
+
+~> use runtime
+~> var c = (runtime:context)
+~> put $c[shell]
+▶ elvish
+~> keys $c | order
+▶ aliases
+▶ builtins
+▶ functions
+▶ jobs
+▶ shell
+▶ variables
+~> put $c[jobs]
+▶ []
+~> put $c[aliases]
+▶ []
+
+# context reflects functions defined after module load #
+
+~> use runtime
+~> fn my-func { }
+~> put (runtime:context)[functions]
+▶ [my-func]
+~> fn other-func { }
+~> put (runtime:context)[functions]
+▶ [my-func other-func]
+
+# context reflects variables defined after module load #
+
+~> use runtime
+~> var my-var = x
+~> use str
+~> str:contains (str:join ',' (runtime:context)[variables]) ',my-var'
+▶ $true
+
+# context includes builtin special forms and builtin functions #
+
+~> use runtime
+~> use str
+~> var b = (str:join ',' (runtime:context)[builtins])
+~> str:contains $b ',if,'
+▶ $true
+~> str:contains $b ',put,'
+▶ $true

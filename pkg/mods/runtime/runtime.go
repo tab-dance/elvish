@@ -27,7 +27,24 @@ func Ns(ev *eval.Evaler) *eval.Ns {
 			"lib-dirs":          vars.NewReadOnly(vals.MakeListSlice(ev.LibDirs)),
 			"rc-path":           vars.NewReadOnly(nonEmptyOrNil(ev.RcPath)),
 			"effective-rc-path": vars.NewReadOnly(nonEmptyOrNil(ev.EffectiveRcPath)),
+		}).
+		AddGoFns(map[string]any{
+			"context": func() vals.Map {
+				return shellContextToMap(ev.Context())
+			},
 		}).Ns()
+}
+
+// shellContextToMap converts an eval.ShellContext to an elvish map value.
+func shellContextToMap(ctx eval.ShellContext) vals.Map {
+	return vals.MakeMap(
+		"shell", ctx.Shell,
+		"aliases", vals.MakeListSlice(ctx.Aliases),
+		"builtins", vals.MakeListSlice(ctx.Builtins),
+		"functions", vals.MakeListSlice(ctx.Functions),
+		"jobs", vals.MakeListSlice(ctx.Jobs),
+		"variables", vals.MakeListSlice(ctx.Variables),
+	)
 }
 
 func nonEmptyOrNil(s string) any {
