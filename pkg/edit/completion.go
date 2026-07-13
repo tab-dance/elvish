@@ -124,6 +124,7 @@ func initCompletion(ed *Editor, ev *eval.Evaler, nb eval.NsBuilder) {
 	matcherMapVar := newMapVar(vals.EmptyMap)
 	argGeneratorMapVar := newMapVar(vals.EmptyMap)
 	commandGeneratorVar := newFnVar(nil)
+	variableGeneratorVar := newFnVar(nil)
 	cfg := func() complete.Config {
 		return complete.Config{
 			Filterer: adaptMatcherMap(
@@ -132,6 +133,8 @@ func initCompletion(ed *Editor, ev *eval.Evaler, nb eval.NsBuilder) {
 				ev, argGeneratorMapVar.Get().(vals.Map)),
 			CommandGenerator: adaptCommandGenerator(
 				ev, commandGeneratorVar.Get()),
+			VariableGenerator: adaptVariableGenerator(
+				ev, variableGeneratorVar.Get()),
 		}
 	}
 	generateForSudo := func(args []string) ([]complete.RawItem, error) {
@@ -151,10 +154,11 @@ func initCompletion(ed *Editor, ev *eval.Evaler, nb eval.NsBuilder) {
 	nb.AddNs("completion",
 		eval.BuildNsNamed("edit:completion").
 			AddVars(map[string]vars.Var{
-				"arg-completer":     argGeneratorMapVar,
-				"binding":           bindingVar,
-				"command-completer": commandGeneratorVar,
-				"matcher":           matcherMapVar,
+				"arg-completer":      argGeneratorMapVar,
+				"binding":            bindingVar,
+				"command-completer":  commandGeneratorVar,
+				"matcher":            matcherMapVar,
+				"variable-completer": variableGeneratorVar,
 			}).
 			AddGoFns(map[string]any{
 				"accept":      func() { listingAccept(app) },
@@ -520,6 +524,60 @@ func adaptCommandGenerator(ev *eval.Evaler, v any) complete.CommandGenerator {
 		}
 		err = ev.Call(gen,
 			eval.CallCfg{Args: []any{seed}, From: "[editor command generator]"},
+			eval.EvalCfg{Ports: []*eval.Port{
+				nil, port1, {File: os.Stderr}}})
+		done()
+
+		return output, err
+	}
+}
+
+// adaptVariableGenerator adapts $edit:completion:variable-completer into a
+// complete.VariableGenerator. If the variable is nil (not set), nil is returned
+// and the built-in variable enumeration is used.
+func adaptVariableGenerator(ev *eval.Evaler, v any) complete.VariableGenerator {
+	gen, ok := v.(eval.Callable)
+	if !ok || gen == nil {
+		return nil
+	}
+	return func(seed, ns string) ([]complete.RawItem, error) {
+		var output []complete.RawItem
+		var outputMutex sync.Mutex
+		collect := func(item complete.RawItem) {
+			outputMutex.Lock()
+			defer outputMutex.Unlock()
+			output = append(output, item)
+		}
+		valueCb := func(ch <-chan any) {
+			for v := range ch {
+				switch v := v.(type) {
+				case string:
+					collect(complete.PlainItem(v))
+				case complexItem:
+					collect(complete.ComplexItem(v))
+				default:
+					collect(complete.PlainItem(vals.ToString(v)))
+				}
+			}
+		}
+		bytesCb := func(r *os.File) {
+			buffered := bufio.NewReader(r)
+			for {
+				line, err := buffered.ReadString('\n')
+				if line != "" {
+					collect(complete.PlainItem(strutil.ChopLineEnding(line)))
+				}
+				if err != nil {
+					break
+				}
+			}
+		}
+		port1, done, err := eval.PipePort(valueCb, bytesCb)
+		if err != nil {
+			panic(err)
+		}
+		err = ev.Call(gen,
+			eval.CallCfg{Args: []any{seed, ns}, From: "[editor variable generator]"},
 			eval.EvalCfg{Ports: []*eval.Port{
 				nil, port1, {File: os.Stderr}}})
 		done()
