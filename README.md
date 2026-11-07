@@ -1,7 +1,6 @@
-# Elvish (tab-dance fork)
+# tabdance-elvish
 
-This repository is the `tab-dance/elvish` fork of the Elvish shell. It keeps the
-upstream Elvish language and shell, and adds a few features aimed at external
+Fork of [elves/elvish](https://github.com/elves/elvish) with added features aimed at external
 completion tools such as [carapace](https://github.com/rsteube/carapace).
 
 ## Enhancements over upstream
