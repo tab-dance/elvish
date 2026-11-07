@@ -231,10 +231,9 @@ Exception: CreateFile non-existent: The system cannot find the file specified.
 ## sock on Windows ##
 //mksock-or-skip sock
 //only-on windows
-// Windows does support Unix sockets now, but the type is not reflected in what
-// we get from os.Stat.
+// Windows supports Unix sockets now, and os.Stat reports the socket type.
 ~> put (os:stat sock)[type]
-▶ irregular
+▶ socket
 
 ## device ##
 //only-on unix

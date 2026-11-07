@@ -17,7 +17,6 @@ import (
 	"src.elv.sh/pkg/errutil"
 )
 
-
 // Config configures the parsing behavior.
 type Config int
 
