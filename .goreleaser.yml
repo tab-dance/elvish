@@ -8,6 +8,8 @@ builds:
   - id: default
     env:
       - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X src.elv.sh/pkg/buildinfo.VersionBase={{ .Version }}
     main: ./cmd/elvish
     binary: elvish
     goos:
