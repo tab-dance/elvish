@@ -47,10 +47,11 @@ const _Arity_name = "NoArgumentRequiredArgumentOptionalArgument"
 var _Arity_index = [...]uint8{0, 10, 26, 42}
 
 func (i Arity) String() string {
-	if i >= Arity(len(_Arity_index)-1) {
+	idx := int(i) - 0
+	if i < 0 || idx >= len(_Arity_index)-1 {
 		return "Arity(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _Arity_name[_Arity_index[i]:_Arity_index[i+1]]
+	return _Arity_name[_Arity_index[idx]:_Arity_index[idx+1]]
 }
 func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
@@ -69,8 +70,9 @@ const _ContextType_name = "OptionOrArgumentAnyOptionLongOptionChainShortOptionOp
 var _ContextType_index = [...]uint8{0, 16, 25, 35, 51, 65, 73}
 
 func (i ContextType) String() string {
-	if i >= ContextType(len(_ContextType_index)-1) {
+	idx := int(i) - 0
+	if i < 0 || idx >= len(_ContextType_index)-1 {
 		return "ContextType(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _ContextType_name[_ContextType_index[i]:_ContextType_index[i+1]]
+	return _ContextType_name[_ContextType_index[idx]:_ContextType_index[idx+1]]
 }
