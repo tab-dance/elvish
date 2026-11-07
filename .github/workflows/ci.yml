@@ -12,20 +12,15 @@ defaults:
 jobs:
 
   test:
-    # The default name will include the "go-version-is" parameter, whcih is
-    # derived from go-version and redundant, so we supply an explicit templated
-    # name.
     name: Run tests (${{ matrix.os }}, ${{ matrix.go-version }})
     strategy:
       matrix:
         os: [ubuntu, macos, windows]
-        go-version: [1.22.x]
-        go-version-is: [new]
+        go-version: [1.23.x]
         include:
           # Test old supported Go version
           - os: ubuntu
-            go-version: 1.21.x
-            go-version-is: [old]
+            go-version: 1.22.x
     env:
       ELVISH_TEST_TIME_SCALE: 20
     runs-on: ${{ matrix.os }}-latest
@@ -44,15 +39,53 @@ jobs:
       run: |
         go test -race ./...
         cd website; go test -race ./...
-    - name: Generate test coverage
-      if: matrix.go-version-is == 'new'
-      run: go test -coverprofile=cover -coverpkg=./pkg/... ./pkg/...
-    - name: Save test coverage
-      if: matrix.go-version-is == 'new'
-      uses: actions/upload-artifact@v4
+
+  release:
+    name: Run GoReleaser
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
       with:
-        name: cover-${{ matrix.os == 'ubuntu' && 'linux' || matrix.os }}
-        path: cover
+        fetch-depth: 0
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.23.x
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v6
+      with:
+        version: latest
+        args: release --clean
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  emulated_tests:
+    name: Run tests (emulated ${{ matrix.go-arch }})
+    strategy:
+      matrix:
+        go-arch: [riscv64, s390x]
+    env:
+      ELVISH_TEST_TIME_SCALE: 20
+      GOARCH: ${{ matrix.go-arch }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up emulator
+      run: |
+        sudo apt update
+        sudo apt install binfmt-support qemu-user-static
+        update-binfmts --display
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.23.x
+    - name: Test with emulator
+      run: |
+        go test ./...
+        cd website; go test ./...
 
   # The purpose of running benchmarks in GitHub Actions is primarily to ensure
   # that the benchmark code runs and doesn't crash. GitHub Action runners don't
@@ -66,40 +99,29 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: 1.22.x
+        go-version: 1.23.x
     - name: Run benchmarks
       run: go test -bench=. -run='^$' ./...
 
-  upload-coverage:
-    name: Upload test coverage
-    strategy:
-      matrix:
-        ostype: [linux, macos, windows]
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Download test coverage
-      uses: actions/download-artifact@v4
-      with:
-        name: cover-${{ matrix.ostype }}
-    - name: Upload coverage to codecov
-      uses: codecov/codecov-action@v3
-      with:
-        files: ./cover
-        flags: ${{ matrix.ostype }}
-
   checks:
     name: Run checks
-    runs-on: ubuntu-latest
+    # Most checks do not rely on the OS, but some (like check-gen) do. To ensure
+    # maximal coverage, we run all of the checks on the three main OSes.
+    strategy:
+      matrix:
+        os: [ubuntu, macos, windows]
+    runs-on: ${{ matrix.os }}-latest
     steps:
+    # autocrlf is problematic for check-fmt-go.
+    - name: Turn off autocrlf
+      if: matrix.os == 'windows'
+      run: git config --global core.autocrlf false
     - name: Checkout code
       uses: actions/checkout@v4
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: 1.22.x
+        go-version: 1.23.x
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -108,40 +130,8 @@ jobs:
       run: |
         go install golang.org/x/tools/cmd/stringer@latest
         go install golang.org/x/tools/cmd/goimports@latest
-        # Keep the versions of staticcheck and codespell in sync with CONTRIBUTING.md
-        go install honnef.co/go/tools/cmd/staticcheck@v0.4.6
-        pip install --user codespell==2.2.6
+        # Keep the versions of staticcheck and codespell in sync with docs/workflows.md
+        go install honnef.co/go/tools/cmd/staticcheck@v0.6.0
+        pip install codespell==2.3.0
     - name: Run checks
       run: make all-checks
-
-  check-rellinks:
-    name: Check relative links in website
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: 1.22.x
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.x'
-    - name: Install Python dependency
-      run: pip3 install beautifulsoup4
-    - name: Check relative links
-      run: make -C website check-rellinks
-
-  lsif:
-    name: Upload SourceGraph LSIF
-    if: github.repository == 'elves/elvish' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    container: sourcegraph/lsif-go:latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Generate LSIF data
-      run: lsif-go
-    - name: Upload LSIF data
-      run: src lsif upload -github-token=${{ secrets.GITHUB_TOKEN }} -ignore-upload-failure
