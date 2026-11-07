@@ -190,7 +190,7 @@ func (c *FmtCodec) Do(op Op) {
 	case OpListItemEnd:
 		if c.containerStart == c.sb.Len() {
 			// When a list item is empty, we will write a line consisting of
-			// bullet punctuations and spaces only. When there are at least 3
+			// bullet punctuation and spaces only. When there are at least 3
 			// instances of the same punctuation, this line will be become a
 			// thematic break instead. Avoid this by varying the punctuation.
 			//

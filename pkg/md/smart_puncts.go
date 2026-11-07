@@ -5,7 +5,7 @@ import (
 	"unicode"
 )
 
-// SmartPunctsCodec wraps another codec, converting certain ASCII punctuations to
+// SmartPunctsCodec wraps another codec, converting certain ASCII punctuation to
 // nicer Unicode counterparts:
 //
 //   - A straight double quote (") is converted to a left double quote (“) when

@@ -1,7 +1,8 @@
 # tabdance-elvish
 
-Fork of [elves/elvish](https://github.com/elves/elvish) with added features aimed at external
-completion tools such as [carapace](https://github.com/rsteube/carapace).
+Fork of [elves/elvish](https://github.com/elves/elvish) with added features
+aimed at external completion tools such as
+[carapace](https://github.com/rsteube/carapace).
 
 ## Enhancements over upstream
 
