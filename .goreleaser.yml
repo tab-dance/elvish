@@ -47,7 +47,7 @@ checksum:
   name_template: SHA256SUMS
 
 release:
-  prerelease: auto
+  prerelease: "false"
 
 changelog:
   sort: asc
