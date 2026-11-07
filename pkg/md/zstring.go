@@ -28,10 +28,11 @@ const _OpType_name = "OpThematicBreakOpHeadingOpCodeBlockOpHTMLBlockOpParagraphO
 var _OpType_index = [...]uint8{0, 15, 24, 35, 46, 57, 74, 89, 104, 117, 134, 149, 167, 183}
 
 func (i OpType) String() string {
-	if i >= OpType(len(_OpType_index)-1) {
+	idx := int(i) - 0
+	if i < 0 || idx >= len(_OpType_index)-1 {
 		return "OpType(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _OpType_name[_OpType_index[i]:_OpType_index[i+1]]
+	return _OpType_name[_OpType_index[idx]:_OpType_index[idx+1]]
 }
 func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
@@ -57,8 +58,9 @@ const _InlineOpType_name = "OpTextOpCodeSpanOpRawHTMLOpNewLineOpEmphasisStartOpE
 var _InlineOpType_index = [...]uint8{0, 6, 16, 25, 34, 49, 62, 83, 102, 113, 122, 129, 139, 154}
 
 func (i InlineOpType) String() string {
-	if i >= InlineOpType(len(_InlineOpType_index)-1) {
+	idx := int(i) - 0
+	if i < 0 || idx >= len(_InlineOpType_index)-1 {
 		return "InlineOpType(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _InlineOpType_name[_InlineOpType_index[i]:_InlineOpType_index[i+1]]
+	return _InlineOpType_name[_InlineOpType_index[idx]:_InlineOpType_index[idx+1]]
 }
