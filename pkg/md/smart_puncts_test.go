@@ -9,7 +9,7 @@ import (
 
 var smartPunctsTestCases = []testCase{
 	{
-		Name:     "Simple smart punctuations",
+		Name:     "Simple smart punctuation",
 		Markdown: `a -- b --- c...`,
 		HTML: dedent(`
 			<p>a – b –- c…</p>

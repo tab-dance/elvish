@@ -350,12 +350,12 @@ func initRegexps() {
 
 	// Capture groups:
 	// 1. Indent
-	// 2. Fence punctuations (backquote fence)
+	// 2. Fence punctuation (backquote fence)
 	// 3. Untrimmed info string (backquote fence)
-	// 4. Fence punctuations (tilde fence)
+	// 4. Fence punctuation (tilde fence)
 	// 5. Untrimmed info string (tilde fence)
 	codeFenceRegexp = regexp.MustCompile("(^ {0,3})(?:(`{3,})([^`]*)|(~{3,})(.*))$")
-	// Capture group 1: fence punctuations
+	// Capture group 1: fence punctuation
 	codeFenceCloserRegexp = regexp.MustCompile("(?:^ {0,3})(`{3,}|~{3,})[ \t]*$")
 
 	// These corresponds to the bullet list in

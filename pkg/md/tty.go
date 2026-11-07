@@ -78,7 +78,7 @@ type TTYCodec struct {
 	buf ui.TextBuilder
 
 	// Current active container blocks. The punct field is not used; the
-	// TTYCodec uses fixed punctuations for each type.
+	// TTYCodec uses fixed punctuation for each type.
 	containers stack[*fmtContainer]
 	// Value of op.Type of the last Do call.
 	lastOpType OpType
