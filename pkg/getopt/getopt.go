@@ -17,8 +17,9 @@ import (
 	"src.elv.sh/pkg/errutil"
 )
 
-// Config configurates the parsing behavior.
-type Config uint
+
+// Config configures the parsing behavior.
+type Config int
 
 const (
 	// Stop parsing options after "--".
@@ -50,7 +51,7 @@ type OptionSpec struct {
 
 // Arity indicates whether an option takes an argument, and whether it is
 // required.
-type Arity uint
+type Arity int
 
 const (
 	// The option takes no argument.
@@ -87,7 +88,7 @@ type Context struct {
 }
 
 // ContextType encodes how the last argument can be completed.
-type ContextType uint
+type ContextType int
 
 const (
 	// OptionOrArgument indicates that the last element may be either a new

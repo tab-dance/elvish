@@ -236,7 +236,7 @@ type Op struct {
 }
 
 // OpType enumerates possible types of an Op.
-type OpType uint
+type OpType int
 
 // Possible output operations.
 const (

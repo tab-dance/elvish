@@ -20,7 +20,7 @@ type InlineOp struct {
 }
 
 // InlineOpType enumerates possible types of an InlineOp.
-type InlineOpType uint
+type InlineOpType int
 
 const (
 	// Text elements. Embedded newlines in OpText are turned into OpNewLine, but
